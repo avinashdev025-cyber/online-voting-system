@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Online Voting System{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <!-- Notification Messages -->
+    {% if messages %}
+    <ul class="messages" id="alert-messages">
+        {% for message in messages %}
+        <li class="alert alert-{{ message.tags }} glass-panel">
+            <span>{{ message }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Sticky Navbar -->
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="{% url 'home' %}" class="brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                SecureVote
+            </a>
+            
+            <ul class="nav-links">
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    {% if user.is_staff %}
+                        <li><a href="{% url 'admin_dashboard' %}" style="color: var(--color-secondary);">Admin Panel</a></li>
+                    {% endif %}
+                    <li><span style="color: var(--text-muted); font-size: 14px; margin-right: 10px;">Hello, <strong>{{ user.username }}</strong></span></li>
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Logout</button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'register' %}" class="btn btn-primary" style="padding: 8px 16px;">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Dynamic Content -->
+    <main class="main-content">
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 SecureVote. Designed by <a href="mailto:avinashdev025@gmail.com">Avinash Kumar Sah</a>. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Auto fade-out alerts JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.getElementById('alert-messages');
+            if (alerts) {
+                setTimeout(function() {
+                    alerts.style.transition = 'opacity 0.8s ease';
+                    alerts.style.opacity = '0';
+                    setTimeout(function() {
+                        alerts.remove();
+                    }, 800);
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>

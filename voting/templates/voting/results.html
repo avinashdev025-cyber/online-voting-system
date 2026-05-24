@@ -1,0 +1,96 @@
+{% extends 'voting/base.html' %}
+
+{% block title %}Election Results - {{ election.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 32px;">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline" style="padding: 8px 16px; margin-bottom: 20px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    
+    <div class="glass-panel" style="padding: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">{{ election.title }} - Results</h1>
+            <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 12px;">Total ballots cast: <strong style="color: var(--color-primary); font-size: 18px;">{{ total_votes }}</strong></p>
+            <div style="font-size: 13px; color: var(--text-muted);">
+                Ended: <strong>{{ election.end_date|date:"M d, Y, h:i A" }}</strong>
+            </div>
+        </div>
+        
+        <div>
+            {% if election.is_ongoing %}
+                <div class="status-badge status-active" style="padding: 8px 16px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%; animation: pulse 1.5s infinite;"></span>
+                    Live Tallies
+                </div>
+            {% else %}
+                <div class="status-badge status-ended" style="padding: 8px 16px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
+                    🔒 Finalized
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="results-container">
+    <div class="glass-panel" style="padding: 32px;">
+        <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">Ballot Standings</h2>
+        
+        {% if results %}
+            {% for candidate in results %}
+                <!-- Highlight winner if election has ended and this is the first candidate (since sorted by votes descending) -->
+                {% with is_winner=forloop.first %}
+                <div class="result-row" style="position: relative;">
+                    <div class="result-info">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="result-candidate">{{ candidate.name }}</span>
+                            {% if candidate.party %}
+                                <span style="font-size: 12px; color: var(--color-secondary); background: rgba(192, 132, 252, 0.1); padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase;">{{ candidate.party }}</span>
+                            {% endif %}
+                            
+                            {% if not election.is_ongoing and is_winner and total_votes > 0 %}
+                                <span class="status-badge status-active" style="font-size: 10px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 2px;">
+                                    👑 Declared Winner
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="result-votes">
+                            <strong>{{ candidate.votes }}</strong> vote{{ candidate.votes|pluralize }} ({{ candidate.percentage }}%)
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: 0%;" data-pct="{{ candidate.percentage }}"></div>
+                    </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-secondary); text-align: center; padding: 20px 0;">No candidate data available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.5; }
+    }
+</style>
+
+<script>
+    // Animate progress bars on load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.progress-bar').forEach(bar => {
+                const pct = bar.getAttribute('data-pct');
+                bar.style.width = pct + '%';
+            });
+        }, 150);
+    });
+</script>
+{% endblock %}

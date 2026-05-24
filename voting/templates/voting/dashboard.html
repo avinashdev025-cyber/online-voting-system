@@ -1,0 +1,101 @@
+{% extends 'voting/base.html' %}
+
+{% block title %}Voter Dashboard - SecureVote{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px;">Voter Dashboard</h1>
+    <p style="color: var(--text-secondary);">Select an active election below to exercise your right to vote, or view results of finalized elections.</p>
+</div>
+
+<div class="admin-grid">
+    <!-- Active and Closed Elections List -->
+    <div>
+        <h2 class="section-title">Available Elections</h2>
+        
+        {% if elections %}
+            <div class="elections-grid" style="grid-template-columns: 1fr;">
+                {% for item in elections %}
+                    <div class="glass-panel election-card" style="margin-bottom: 20px;">
+                        <div class="election-header">
+                            <div>
+                                <h3 class="election-title">{{ item.obj.title }}</h3>
+                                <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Created: {{ item.obj.created_at|date:"M d, Y, h:i A" }}</p>
+                            </div>
+                            
+                            <div>
+                                {% if item.has_voted %}
+                                    <span class="status-badge status-voted">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                        Voted
+                                    </span>
+                                {% elif item.is_ongoing %}
+                                    <span class="status-badge status-active">Active</span>
+                                {% elif item.has_ended %}
+                                    <span class="status-badge status-ended">Ended</span>
+                                {% else %}
+                                    <span class="status-badge status-upcoming">Upcoming</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <p class="election-desc">{{ item.obj.description }}</p>
+                        
+                        <div class="election-meta">
+                            <div>
+                                <span>📅 Ends: <strong>{{ item.obj.end_date|date:"M d, Y, h:i A" }}</strong></span>
+                            </div>
+                            
+                            <div>
+                                {% if item.has_voted %}
+                                    <a href="{% url 'results' election_id=item.obj.id %}" class="btn btn-outline" style="padding: 8px 16px;">View Live Results</a>
+                                {% elif item.is_ongoing %}
+                                    <a href="{% url 'election_detail' election_id=item.obj.id %}" class="btn btn-primary" style="padding: 8px 16px;">Cast Your Vote</a>
+                                {% elif item.has_ended %}
+                                    <a href="{% url 'results' election_id=item.obj.id %}" class="btn btn-outline" style="padding: 8px 16px;">View Final Results</a>
+                                {% else %}
+                                    <button class="btn btn-outline" style="padding: 8px 16px;" disabled>Not Started</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                <p style="font-size: 16px; margin-bottom: 12px;">No elections are currently registered in the database.</p>
+                {% if user.is_staff %}
+                    <p style="font-size: 14px; color: var(--text-muted);">Go to the <a href="{% url 'admin_dashboard' %}" style="color: var(--color-secondary);">Admin Panel</a> to create an election.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Personal Ballot Receipt/History Panel -->
+    <div>
+        <h2 class="section-title">Your Ballot Receipts</h2>
+        
+        <div class="glass-panel" style="padding: 24px;">
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+                Below are cryptographic receipt summaries of the votes you've cast. To protect ballot secrecy, your specific choice is recorded, but can only be viewed in aggregate.
+            </p>
+            
+            {% if voted_elections %}
+                {% for vote in voted_elections %}
+                    <div style="border-left: 3px solid var(--color-success); padding-left: 12px; margin-bottom: 16px; font-size: 14px;">
+                        <h4 style="font-weight: 600; margin-bottom: 2px;">{{ vote.election.title }}</h4>
+                        <p style="color: var(--text-secondary); font-size: 12px;">Receipt: SHA-256...{{ vote.id }}v9t</p>
+                        <p style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">Cast at: {{ vote.timestamp|date:"M d, Y, h:i A" }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 20px 0; color: var(--text-muted); font-size: 14px;">
+                    You haven't cast any ballots yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

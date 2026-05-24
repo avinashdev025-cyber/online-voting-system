@@ -1,0 +1,99 @@
+{% extends 'voting/base.html' %}
+
+{% block title %}Admin Dashboard - SecureVote{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+    <div>
+        <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px;">Admin Statistics Panel</h1>
+        <p style="color: var(--text-secondary);">Supervise election state parameters, audit ballot metrics, and monitor voter engagement indicators.</p>
+    </div>
+    
+    <div>
+        <a href="/admin/" class="btn btn-primary" target="_blank" style="padding: 10px 20px;">
+            Open Django Database Console
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px;">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+        </a>
+    </div>
+</div>
+
+<!-- Key Platform Statistics Cards -->
+<div class="stats-row" style="margin-bottom: 40px;">
+    <div class="glass-panel stat-card" style="border-top: 3px solid var(--color-primary);">
+        <div class="stat-value">{{ total_voters }}</div>
+        <div class="stat-label">Registered Voters</div>
+    </div>
+    <div class="glass-panel stat-card" style="border-top: 3px solid var(--color-secondary);">
+        <div class="stat-value">{{ total_votes }}</div>
+        <div class="stat-label">Total Ballots Cast</div>
+    </div>
+    <div class="glass-panel stat-card" style="border-top: 3px solid var(--color-success);">
+        <div class="stat-value">{{ active_elections_count }}</div>
+        <div class="stat-label">Ongoing Elections</div>
+    </div>
+</div>
+
+<!-- Election Summaries Table -->
+<h2 class="section-title" style="margin-bottom: 20px;">Election Audit Trails</h2>
+<div class="glass-panel" style="overflow-x: auto; padding: 16px;">
+    {% if election_summaries %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Election Title</th>
+                    <th>Status</th>
+                    <th>Ballots Cast</th>
+                    <th>Leading Candidate</th>
+                    <th>Lead Votes</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summary in election_summaries %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ summary.obj.title }}</td>
+                        <td>
+                            {% if summary.is_ongoing %}
+                                <span class="status-badge status-active" style="font-size: 11px;">Active</span>
+                            {% else %}
+                                <span class="status-badge status-ended" style="font-size: 11px;">Ended</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 500; color: var(--color-primary);">{{ summary.total_votes }}</td>
+                        <td>
+                            {% if summary.leading_candidate %}
+                                <span style="font-weight: 500;">{{ summary.leading_candidate.name }}</span>
+                                {% if summary.leading_candidate.party_name %}
+                                    <span style="color: var(--text-muted); font-size: 12px;">({{ summary.leading_candidate.party_name }})</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: var(--text-muted); font-style: italic;">No votes yet</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if summary.leading_candidate %}
+                                <strong style="color: var(--color-success);">{{ summary.leading_votes }}</strong>
+                            {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <a href="{% url 'results' election_id=summary.obj.id %}" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">
+                                Standings
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div style="text-align: center; padding: 40px 0; color: var(--text-secondary);">
+            No elections have been created yet. Open the database console above to add elections and candidates.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
